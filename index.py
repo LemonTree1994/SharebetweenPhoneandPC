@@ -3,12 +3,16 @@
 from flask import Flask, request, send_from_directory
 import os
 import io
+import socket
 
 
 app = Flask(__name__)
 abspath = os.path.dirname(__file__)
 print(abspath)
-
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.connect(('www.baidu.com', 80))
+ip = s.getsockname()[0]
+print(ip)
 
 @app.route("/")
 def index():
