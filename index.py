@@ -17,17 +17,8 @@ print(ip)
 
 @app.route("/")
 def index():
-    downloadhtml = '''
-    <br/>
-    <form action="/d" method='post'>
-        <input type='text' name='path'>
-        <input type='submit' value='下载'>
-    </form>
-    '''
     title = f'{abspath}下的文件:<br/>'
     return title+_listfilestohtml('.')
-    filedict = _listfiles('.')
-    return str(filedict)+downloadhtml
 
 
 def _listfilestohtml(path):
@@ -37,10 +28,10 @@ def _listfilestohtml(path):
     for file in files:
         # print(f'file-{file}')
         filepath = path+"/"+file
-        print(f'filepath: {filepath}')
+        # print(f'filepath: {filepath}')
         # print(f'type {file}', os.path.isdir(filepath))
         filepathsplit = filepath.split("/")
-        print(filepathsplit)
+        # print(filepathsplit)
         filepathdisplay = filepathsplit[-1]
 
         # print(filepathdisplay)
@@ -58,17 +49,18 @@ def _listfilestohtml(path):
 @app.route("/d", methods=['GET', 'POST'])
 def download():
     path = request.values.get('path')
+    print(path)
     if os.path.isfile(path):
-        return send_from_directory(abspath.encode().decode('latin-1'), filename=path.encode().decode('latin-1'), as_attachment=True)
-        # response = make_response(send_from_directory(abspath, path, as_attachment=True))
-        # response.headers["Content-Disposition"] = "attachment; filename={}".format(path.encode().decode('latin-1'))
-        # return response
+        # return send_from_directory(abspath, path.encode().decode('latin-1'), as_attachment=True)
+        response = make_response(send_from_directory(abspath, path, as_attachment=True))
+        response.headers["Content-Disposition"] = "attachment; filename={}".format(path.split("/")[-1].encode().decode('latin-1'))
+        return response
 
     else:
-        return 'is not a file'
+        return 'Not a file.'
 
 
 
 if  __name__ == "__main__":
-    app.run(host='0.0.0.0', port=80, threaded=True)
+    app.run(host='0.0.0.0', port=80, threaded=True, debug=True)
 
