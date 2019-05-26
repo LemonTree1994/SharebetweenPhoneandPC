@@ -1,21 +1,33 @@
 # coding=utf-8
 
-from flask import Flask
+from flask import Flask, request, send_from_directory
 import os
 import io
 
 
 app = Flask(__name__)
+abspath = os.path.dirname(__file__)
+print(abspath)
 
 
 @app.route("/")
 def index():
-    abspath = os.path.dirname(__file__)
-    print(abspath)
-    return str(_listfiles(abspath))
+    downloadhtml = '''
+    <br/>
+    <form action="/d" method='post'>
+        <input type='text' name='path'>
+        <input type='submit' value='下载'>
+    </form>
+    '''
+    return str(_listfiles('.'))+downloadhtml
+
+
+def _parsedicttohtml():
+    pass
+
 
 def _listfiles(path):
-    display = []
+    display = {}
     files = os.listdir(path)
     # print(f'files:{files}')
     for file in files:
@@ -26,10 +38,21 @@ def _listfiles(path):
             # nextpath = os.path.join(path, file)
             nextpath = path+"/"+file
             # print(f'nextpath={nextpath}')
-            display .append(_listfiles(nextpath))
+            display[file]=_listfiles(nextpath)
         else:
-            display.append(filepath)
+            display[file]=1
     return display
+
+
+@app.route("/d", methods=['GET', 'POST'])
+def download():
+    path = request.values.get('path')
+    if os.path.isfile(path):
+        return send_from_directory(abspath, filename=path, as_attachment=True)
+    else:
+        return 'is not a file'
+
+
 
 if  __name__ == "__main__":
     app.run(host='0.0.0.0', port=80, debug=True)
