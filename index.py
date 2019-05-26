@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from flask import Flask, request, send_from_directory
+from flask import Flask, request, send_from_directory, make_response
 import os
 import io
 import socket
@@ -8,6 +8,7 @@ import socket
 
 app = Flask(__name__)
 abspath = os.path.dirname(__file__)
+print()
 print(abspath)
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.connect(('www.baidu.com', 80))
@@ -36,9 +37,10 @@ def _listfilestohtml(path):
     for file in files:
         # print(f'file-{file}')
         filepath = path+"/"+file
-        # print(f'filepath: {filepath}')
+        print(f'filepath: {filepath}')
         # print(f'type {file}', os.path.isdir(filepath))
         filepathsplit = filepath.split("/")
+        print(filepathsplit)
         filepathdisplay = filepathsplit[-1]
 
         # print(filepathdisplay)
@@ -49,35 +51,19 @@ def _listfilestohtml(path):
             # print(f'nextpath={nextpath}')
             display += _listfilestohtml(nextpath)
         else:
-            display += '&nbsp;'*4*(len(filepathsplit)-1) + f'<a href=/d?path={filepath}>'+filepathdisplay+'</a><br/>'
+            display += '&nbsp;'*4*(len(filepathsplit)-1) + f'<a href="/d?path={filepath}">'+filepathdisplay+'</a><br/>'
     return display
 
-
-# def _listfiles(path):
-#     display = {}
-#     files = os.listdir(path)
-#     # print(f'files:{files}')
-#     for file in files:
-#         # print(f'file-{file}')
-#         filepath = path+"/"+file
-#         # print(f'type {file}', os.path.isdir(filepath))
-#         if os.path.isdir(filepath):
-#             # nextpath = os.path.join(path, file)
-#             nextpath = path+"/"+file
-#             # print(f'nextpath={nextpath}')
-#             display[file]=_listfiles(nextpath)
-#         else:
-#             display[file]=1
-#     return display
-#
-# def _parsedicttohtml(dict):
-#     pass
 
 @app.route("/d", methods=['GET', 'POST'])
 def download():
     path = request.values.get('path')
     if os.path.isfile(path):
-        return send_from_directory(abspath, filename=path, as_attachment=True)
+        return send_from_directory(abspath.encode().decode('latin-1'), filename=path.encode().decode('latin-1'), as_attachment=True)
+        # response = make_response(send_from_directory(abspath, path, as_attachment=True))
+        # response.headers["Content-Disposition"] = "attachment; filename={}".format(path.encode().decode('latin-1'))
+        # return response
+
     else:
         return 'is not a file'
 
