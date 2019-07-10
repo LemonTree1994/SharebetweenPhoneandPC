@@ -29,6 +29,8 @@ def _listfilestohtml(path):
     # print(f'files:{files}')
     for file in files:
         # print(f'file-{file}')
+        if file == "SharebetweenPhoneandPC":
+            continue
         filepath = os.path.join(path, file)
         # print(f'filepath: {filepath}')
         # print(f'type {file}', os.path.isdir(filepath))
