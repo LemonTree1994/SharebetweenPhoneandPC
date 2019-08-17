@@ -1,4 +1,3 @@
-# SharebetweenPhoneandPC
 仅适用于windows
 ###使用方法
 1. 下载源代码
