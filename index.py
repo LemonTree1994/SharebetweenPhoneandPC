@@ -29,7 +29,7 @@ def _listfilestohtml(path):
     # print(f'files:{files}')
     for file in files:
         # print(f'file-{file}')
-        if file == "SharebetweenPhoneandPC":
+        if file == "share-files":
             continue
         filepath = os.path.join(path, file)
         # print(f'filepath: {filepath}')
@@ -70,5 +70,5 @@ def download():
 
 
 if  __name__ == "__main__":
-    app.run(host='0.0.0.0', port=80, threaded=True)
+    app.run(host='0.0.0.0', port=8888, threaded=True)
 
