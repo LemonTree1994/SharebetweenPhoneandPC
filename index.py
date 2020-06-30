@@ -1,35 +1,57 @@
 # coding=utf-8
 
-from flask import Flask, request, send_from_directory, make_response
-import os
-import io
-import socket
 
+import os
+import socket
+import sys
+import functools
+import time
+from flask import Flask, request, send_from_directory, make_response
 
 app = Flask(__name__)
-abspath = os.path.dirname(__file__)
-abspath = os.path.abspath(os.path.join(abspath, '..'))
-print()
-# abspath = '.'
+abspath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if len(sys.argv)>=2:
+    inputpath = sys.argv[1]
+    if os.path.isdir(inputpath):
+        abspath = os.path.abspath(inputpath)
+
 print(abspath)
+
+
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.connect(('www.baidu.com', 80))
 ip = s.getsockname()[0]
 print(ip)
 
+
+
+def timeit(fn):
+    print(f"allow timeit on {fn.__name__}")
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = fn(*args, **kwargs)
+        end = time.time()
+        print(f" {fn.__name__} run time: {end-start} ms")
+        return result
+    return wrapper
+
+
 @app.route("/")
+@timeit
 def index():
     title = f'{abspath}下的文件:<br/>'
     return title+_listfilestohtml(abspath)
 
 
+@functools.lru_cache(maxsize=128)
 def _listfilestohtml(path):
-    display = ''
+    display = []
     files = os.listdir(path)
     # print(f'files:{files}')
     for file in files:
         # print(f'file-{file}')
-        if file == "share-files":
+        if file.startswith("."):
             continue
         filepath = os.path.join(path, file)
         # print(f'filepath: {filepath}')
@@ -41,20 +63,22 @@ def _listfilestohtml(path):
         # print(filepathdisplay)
         if os.path.isdir(filepath):
             # nextpath = os.path.join(path, file)
-            display += '&nbsp;'*4*(len(filepathsplit)-1) + filepathdisplay+'<br/>'
+            display.append('&nbsp;'*4*(len(filepathsplit)-1) + filepathdisplay+'<br/>')
             nextpath = os.path.join(path, file)
             # print(f'nextpath={nextpath}')
-            display += _listfilestohtml(nextpath)
+            display.append( _listfilestohtml(nextpath))
         else:
-            display += '&nbsp;'*4*(len(filepathsplit)-1) + f'<a href="/d?path={filepath}">'+filepathdisplay+'</a><br/>'
-    return display
+            display .append('&nbsp;'*4*(len(filepathsplit)-1) + f'<a href="/download?path={filepath}">'+filepathdisplay+'</a><br/>')
+    return "".join(display)
 
 
-@app.route("/d", methods=['GET', 'POST'])
+@app.route("/download", methods=['GET', 'POST'])
 def download():
     path = request.values.get('path')
     path = os.path.abspath(path)
     print(path)
+    if not path.startswith(abspath):
+        return "Invalid path."
     if os.path.isfile(path):
         dirpath = os.path.dirname(path)
         filename = path.replace(dirpath, '')[1:]
@@ -65,10 +89,9 @@ def download():
         return response
 
     else:
-        return 'Not a file.'
-
+        return 'File name error or not a file.'
 
 
 if  __name__ == "__main__":
-    app.run(host='0.0.0.0', port=8888, threaded=True)
+    app.run(host='0.0.0.0', port=80, threaded=True)
 
